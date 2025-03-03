@@ -1,4 +1,4 @@
-build/
+build/*
 CMakeFiles/*
 CMakeCache.txt
 cmake_install.cmake
@@ -9,3 +9,6 @@ independent_output
 concurrent_output2
 
 running_experiments.md
+
+
+.vscode/
