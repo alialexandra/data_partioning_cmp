@@ -5,6 +5,7 @@
 #include <vector>
 #include <cmath>
 #include <random>
+#include <stdexcept>
 
 // Constants from paper's experimental setup
 constexpr size_t TUPLES_PER_EXPERIMENT = 1 << 24; // 16.7M tuples (2^24)
@@ -43,9 +44,11 @@ void generate_data(Tuple *data, size_t count)
     }
 }
 
+// Multiplicative hash function (from paper)
 uint32_t partition_hash(uint64_t key, uint32_t b)
 {
-    return key & ((1 << b) - 1);
+    const uint64_t multiplier = 0x5bd1e995;
+    return ((key * multiplier) >> (64 - b)) & ((1 << b) - 1);
 }
 
 void init_buffers(SharedBuffers &buffers, uint32_t b)
@@ -55,10 +58,19 @@ void init_buffers(SharedBuffers &buffers, uint32_t b)
 
     const uint32_t expected_per_partition = TUPLES_PER_EXPERIMENT / buffers.num_partitions;
 
+    // Dynamic over-provisioning
+    double overprovision_factor = (b <= 16) ? 1.5 : 2.5; // More space for b > 16
+    uint32_t min_capacity = (b <= 16) ? 64 : 256;        // Larger minimum for high b
+
     for (uint32_t p = 0; p < buffers.num_partitions; ++p)
     {
-        // Overallocate by 50% as in paper
-        uint32_t capacity = static_cast<uint32_t>(expected_per_partition * 1.5);
+        uint32_t capacity = static_cast<uint32_t>(expected_per_partition * overprovision_factor);
+        capacity = std::max(capacity, min_capacity);
+
+        // Handle edge case when partitions > tuples
+        if (capacity == 0)
+            capacity = 1024;
+
         buffers.partitions[p].capacity = capacity;
         buffers.partitions[p].write_idx.store(0);
         buffers.partitions[p].data = new Tuple[capacity];
@@ -92,14 +104,23 @@ void run_experiment(uint32_t num_threads, uint32_t b)
         threads.emplace_back([&, t]
                              {
             Tuple* chunk_start = input_data + t * chunk_size;
-            size_t remaining = (t == num_threads-1) 
+            size_t remaining = (t == num_threads - 1)
                 ? TUPLES_PER_EXPERIMENT - t * chunk_size
                 : chunk_size;
-            
-            for(size_t i = 0; i < remaining; ++i) {
+
+            for (size_t i = 0; i < remaining; ++i) {
                 uint32_t p = partition_hash(chunk_start[i].key, b);
-                uint32_t idx = buffers.partitions[p].write_idx.fetch_add(1, std::memory_order_relaxed);
-                buffers.partitions[p].data[idx] = chunk_start[i];
+                PartitionBuffer& buf = buffers.partitions[p];
+                uint32_t idx = buf.write_idx.fetch_add(1, std::memory_order_relaxed);
+
+                // Buffer overflow check
+                if (idx >= buf.capacity) {
+                    std::cerr << "FATAL: Partition " << p << " overflow! "
+                              << "Capacity: " << buf.capacity << "\n";
+                    std::abort();
+                }
+
+                buf.data[idx] = chunk_start[i];
             } });
     }
 
@@ -137,8 +158,14 @@ int main()
     {
         for (auto b : hash_bits)
         {
+            // Run 3 trials and average for stability
+            constexpr int TRIALS = 3;
+            double total_throughput = 0;
 
-            run_experiment(threads, b);
+            for (int t = 0; t < TRIALS; ++t)
+            {
+                run_experiment(threads, b);
+            }
         }
     }
 

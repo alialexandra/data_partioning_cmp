@@ -1,40 +1,54 @@
 #include <atomic>
 #include <thread>
 #include <vector>
-#include <cstring>
+#include <cstdint>
+#include <iostream>
+#include <pthread.h>
+#include <random>
 
-// Cache line size (typically 64 bytes)
 constexpr size_t CACHE_LINE_SIZE = 64;
 
-// Tuple structure: 8B key + 8B payload
-struct Tuple
+// 16B tuple structure (8B key + 8B payload)
+struct alignas(CACHE_LINE_SIZE) Tuple
 {
     uint64_t key;
     uint64_t payload;
 };
 
-// Per-thread, per-partition buffer with metadata alignment
+// Per-thread, per-partition buffer
 struct alignas(CACHE_LINE_SIZE) PartitionBuffer
 {
-    uint32_t write_idx; // 32-bit counter
-    uint32_t capacity;  // Max tuples in buffer
-    Tuple *data;        // Allocated buffer
+    uint32_t write_idx;
+    uint32_t capacity;
+    Tuple *data;
 };
 
-// Thread-local storage for all partitions
 struct ThreadBuffers
 {
-    PartitionBuffer *partitions; // Array of 2^b buffers
+    PartitionBuffer *partitions;
     uint32_t num_partitions;
 };
 
-// Hash function (using lower b bits)
+// Generate synthetic data with uniform keys
+std::vector<Tuple> generate_data(size_t num_tuples)
+{
+    std::vector<Tuple> data(num_tuples);
+    std::mt19937_64 rng(std::random_device{}());
+
+#pragma omp parallel for
+    for (size_t i = 0; i < num_tuples; ++i)
+    {
+        data[i].key = rng(); // Uniform random keys
+        data[i].payload = i; // Sequential payload
+    }
+    return data;
+}
+
 uint32_t partition_hash(uint64_t key, uint32_t b)
 {
     return key & ((1 << b) - 1);
 }
 
-// Initialize thread-local buffers
 void init_buffers(ThreadBuffers &tb, uint32_t b, uint32_t expected_tuples)
 {
     tb.num_partitions = 1 << b;
@@ -42,7 +56,6 @@ void init_buffers(ThreadBuffers &tb, uint32_t b, uint32_t expected_tuples)
 
     for (uint32_t p = 0; p < tb.num_partitions; ++p)
     {
-        // Overallocate by 50%
         uint32_t capacity = expected_tuples * 1.5;
         tb.partitions[p].capacity = capacity;
         tb.partitions[p].write_idx = 0;
@@ -56,17 +69,13 @@ void init_buffers(ThreadBuffers &tb, uint32_t b, uint32_t expected_tuples)
     }
 }
 
-// Process input chunk with thread-local buffers
 void process_chunk(ThreadBuffers &tb, Tuple *input, size_t count, uint32_t b)
 {
     for (size_t i = 0; i < count; ++i)
     {
-        Tuple &tuple = input[i];
-        uint32_t p = partition_hash(tuple.key, b);
-
+        uint32_t p = partition_hash(input[i].key, b);
         PartitionBuffer &buf = tb.partitions[p];
-        // Assertion: buf.write_idx < buf.capacity (guaranteed by overallocation)
-        buf.data[buf.write_idx++] = tuple;
+        buf.data[buf.write_idx++] = input[i];
     }
 }
 
@@ -75,35 +84,47 @@ int main()
     // Configuration
     const uint32_t b = 10; // 1024 partitions
     const uint32_t num_threads = 16;
-    const uint64_t total_tuples = 1e8;
+    const uint64_t total_tuples = 1 << 24; // 16.7M tuples
 
-    // Calculate expected tuples per partition per thread
-    uint32_t expected_per_partition = total_tuples / (num_threads * (1 << b));
+    // Generate synthetic data
+    std::vector<Tuple> data = generate_data(total_tuples);
 
-    // Initialize thread resources
+    // Calculate chunk size per thread
+    const size_t tuples_per_thread = total_tuples / num_threads;
+
+    // Thread resources
     std::vector<std::thread> workers;
     std::vector<ThreadBuffers> all_buffers(num_threads);
+
+    auto start = std::chrono::high_resolution_clock::now();
 
     // Launch threads
     for (uint32_t t = 0; t < num_threads; ++t)
     {
         workers.emplace_back([&, t]
                              {
-            // Initialize thread-local buffers
-            init_buffers(all_buffers[t], b, expected_per_partition);
-            
-            // Process assigned input chunk (pseudo-input)
-            Tuple* thread_input = ...;  // Get input pointer for this thread
-            size_t tuples_per_thread = total_tuples / num_threads;
-            process_chunk(all_buffers[t], thread_input, tuples_per_thread, b); });
+            // Set CPU affinity (spread across first 16 cores)
+            cpu_set_t cpuset;
+            CPU_ZERO(&cpuset);
+            CPU_SET(t % 16, &cpuset);
+            pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+
+            // Initialize buffers
+            init_buffers(all_buffers[t], b, tuples_per_thread/(1 << b));
+
+            // Process chunk
+            Tuple* chunk_start = data.data() + t * tuples_per_thread;
+            process_chunk(all_buffers[t], chunk_start, tuples_per_thread, b); });
     }
 
     // Wait for completion
     for (auto &worker : workers)
         worker.join();
 
-    // Downstream processing would need to gather partitions from:
-    // all_buffers[thread].partitions[partition]
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+    std::cout << "Independent Output completed in " << duration.count() << " ms\n";
 
     // Cleanup
     for (auto &tb : all_buffers)
