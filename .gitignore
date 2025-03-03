@@ -1,0 +1,11 @@
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+
+# ignore the executable files
+concurrent_output
+independent_output
+concurrent_output2
+
+running_experiments.md
