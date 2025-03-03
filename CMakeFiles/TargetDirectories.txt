@@ -1,5 +1,5 @@
-/home/alexandra/ComputersPerformance/project1/data_partioning_cmp/CMakeFiles/independent_output.dir
-/home/alexandra/ComputersPerformance/project1/data_partioning_cmp/CMakeFiles/concurrent_output.dir
-/home/alexandra/ComputersPerformance/project1/data_partioning_cmp/CMakeFiles/concurrent_output2.dir
-/home/alexandra/ComputersPerformance/project1/data_partioning_cmp/CMakeFiles/edit_cache.dir
-/home/alexandra/ComputersPerformance/project1/data_partioning_cmp/CMakeFiles/rebuild_cache.dir
+/home/group999/workspace/DataPartitionRepo/data_partioning_cmp/CMakeFiles/independent_output.dir
+/home/group999/workspace/DataPartitionRepo/data_partioning_cmp/CMakeFiles/concurrent_output.dir
+/home/group999/workspace/DataPartitionRepo/data_partioning_cmp/CMakeFiles/concurrent_output2.dir
+/home/group999/workspace/DataPartitionRepo/data_partioning_cmp/CMakeFiles/edit_cache.dir
+/home/group999/workspace/DataPartitionRepo/data_partioning_cmp/CMakeFiles/rebuild_cache.dir

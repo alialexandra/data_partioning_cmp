@@ -131,7 +131,7 @@ int main()
 {
     // Test parameters matching paper's Figure 5
     std::vector<uint32_t> thread_counts = {1, 2, 4, 8, 16, 32};
-    std::vector<uint32_t> hash_bits = {4, 6, 8, 10, 12, 14, 16, 18};
+    std::vector<uint32_t> hash_bits = {4, 6, 8, 10, 12, 14, 16};
 
     for (auto threads : thread_counts)
     {
