@@ -44,3 +44,23 @@ Use perf to collect hardware metrics.
 Compare results with the paper’s findings.
 
 Let me know if you need clarification on any part!
+
+
+
+
+for running with cpu affinity 
+
+group999@dionysos:~/workspace/DataPartitionRepo/data_partioning_cmp$ numactl --hardware
+available: 2 nodes (0-1)
+node 0 cpus: 0 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30
+node 0 size: 64131 MB
+node 0 free: 52638 MB
+node 1 cpus: 1 3 5 7 9 11 13 15 17 19 21 23 25 27 29 31
+node 1 size: 64462 MB
+node 1 free: 62140 MB
+node distances:
+node   0   1 
+  0:  10  21 
+  1:  21  10 
+
+  

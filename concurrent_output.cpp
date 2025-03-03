@@ -39,7 +39,7 @@ void generate_data(Tuple *data, size_t count)
     for (size_t i = 0; i < count; ++i)
     {
         data[i].key = dist(rng);
-        data[i].payload = i;
+        data[i].payload = 0;
     }
 }
 
