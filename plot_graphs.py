@@ -47,5 +47,7 @@ plt.legend(title="Threads")
 plt.tight_layout()
 
 # Save the figure as a PNG file and display it.
-plt.savefig("graph.png")
+output_filename = args.filename.replace('.csv', '.png')
+plt.savefig(output_filename)
+
 #plt.show()
