@@ -11,4 +11,4 @@ concurrent_output2
 running_experiments.md
 
 
-.vscode/
+.vscode/*
