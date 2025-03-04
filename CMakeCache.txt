@@ -148,7 +148,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=project1
+CMAKE_PROJECT_NAME:STATIC=data_partioning_cmp
 
 //Path to a program.
 CMAKE_RANLIB:FILEPATH=/usr/bin/ranlib
@@ -216,13 +216,13 @@ CMAKE_TAPI:FILEPATH=CMAKE_TAPI-NOTFOUND
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
 //Value Computed by CMake
-project1_BINARY_DIR:STATIC=/home/alexandra/ComputersPerformance/project1/data_partioning_cmp
+data_partioning_cmp_BINARY_DIR:STATIC=/home/alexandra/ComputersPerformance/project1/data_partioning_cmp
 
 //Value Computed by CMake
-project1_IS_TOP_LEVEL:STATIC=ON
+data_partioning_cmp_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
-project1_SOURCE_DIR:STATIC=/home/alexandra/ComputersPerformance/project1/data_partioning_cmp
+data_partioning_cmp_SOURCE_DIR:STATIC=/home/alexandra/ComputersPerformance/project1/data_partioning_cmp
 
 
 ########################
