@@ -43,6 +43,7 @@ void generate_data(Tuple *data, size_t count)
     }
 }
 
+// todo: experiment with the hash function
 uint32_t partition_hash(uint64_t key, uint32_t b)
 {
     return key & ((1 << b) - 1);
