@@ -2,6 +2,10 @@
 
 # Run the executable and overwrite the results in concurrent_results.csv
 rm -rf concurrent_output concurrent_output_affinity
+
+mkdir -p build
+cd build
+cmake ..
 make
 echo "Running no affinity example"
 mkdir -p ./no_affinity_results
@@ -13,7 +17,7 @@ echo "Done with the affinity example"
 set -e
 
 mkdir -p ./affinity_results
-
+mkdir -p ./perf_logs
 
 PROGRAM=./concurrent_output_affinity
 
@@ -54,16 +58,20 @@ get_cross_numa_cores() {
   echo "${result[@]}"
 }
 
-# Run the program with a label and core list
+# Run the program with a label and core list, including perf output
 run_affinity_case() {
   local label="$1"
   shift
   local cores=("$@")
   local core_args="${#cores[@]} ${cores[@]}"
   echo "Running case: $label on cores: ${cores[*]}"
-  echo "Running args: $PROGRAM $core_args"
+  echo "Running: $PROGRAM $core_args"
+  echo "ARGS: $PROGRAM $core_args"
 
   $PROGRAM $core_args > ./affinity_results/concurrent_${label}.csv
+
+  perf stat -e cycles,instructions,cache-misses,L1-dcache-load-misses,LLC-load-misses \
+    $PROGRAM $core_args &> ./perf_logs/perf_${label}.txt
 }
 
 # Thread counts to test
