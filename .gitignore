@@ -1,5 +1,5 @@
-build/*
-CMakeFiles/*
+build/
+CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 
@@ -10,6 +10,14 @@ concurrent_output2
 concurrent_output2.cpp
 concurrent_output3.cpp
 running_experiments.md
+concurrent_results3.csv
+concurrent_results2.csv
+concurrent_results4.csv
+concurrent_output_backup.cpp
+concurrent_output2.cpp
+concurrent_output_affinity
+.vscode/
 
+no_affinity_results_local/
 
-.vscode/*
+affinity_results_local

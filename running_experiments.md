@@ -3,9 +3,6 @@ Vary Threads: Test with 1, 2, 4, 8, 16 threads.
 
 Vary Partitions: Use b = 4 (16 partitions) to b = 16 (65K partitions).
 
-Measure:
-
-bash
 Copy
 perf stat -e cache-misses,dTLB-load-misses ./your_program
 5. Key Analysis Points
@@ -242,4 +239,3 @@ Your code is correct but reflects the inherent limitations of the "Concurrent Ou
 This aligns with the paper’s conclusion:  
 > *"High performance partitioning requires balancing parallelism, contention, active cache lines, and metadata size."*  
 
-Let me know if you’d like help implementing any of the alternative techniques!
