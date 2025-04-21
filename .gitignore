@@ -9,6 +9,7 @@ independent_output
 concurrent_output2
 
 running_experiments.md
-
+experiment_results.csv
+partitioning_performance.png
 
 .vscode/*
