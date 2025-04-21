@@ -1,0 +1,18 @@
+DEBUG: argc = 10
+argv[0] = './concurrent_output_affinity'
+argv[1] = '8'
+argv[2] = '1'
+argv[3] = '5'
+argv[4] = '9'
+argv[5] = '13'
+argv[6] = '17'
+argv[7] = '21'
+argv[8] = '25'
+argv[9] = '29'
+Threads: 8, Hash Bits: 4, Throughput: 29.2122 MTuple/s
+Threads: 8, Hash Bits: 6, Throughput: 45.4392 MTuple/s
+Threads: 8, Hash Bits: 8, Throughput: 59.1169 MTuple/s
+Threads: 8, Hash Bits: 10, Throughput: 62.7994 MTuple/s
+Threads: 8, Hash Bits: 12, Throughput: 58.4021 MTuple/s
+Threads: 8, Hash Bits: 14, Throughput: 49.9316 MTuple/s
+Threads: 8, Hash Bits: 16, Throughput: 43.1122 MTuple/s

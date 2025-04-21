@@ -3,7 +3,7 @@ project(data_partitioning_cmp)
 
 add_executable(independent_output independent_output.cpp)
 add_executable(concurrent_output concurrent_output.cpp)
-add_executable(concurrent_output2 concurrent_output2.cpp)
+add_executable(concurrent_output_affinity concurrent_output_affinity.cpp)
 
 
 # Modern way to set C++ version
