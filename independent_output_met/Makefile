@@ -17,7 +17,7 @@ $(TARGET): $(SRCS)
 
 # Clean up
 clean:
-	rm -f $(TARGET) $(OBJS) gmon.out perf.data
+	rm -f $(TARGET) $(OBJS) gmon.out
 
 # Clean and rebuild
 rebuild: clean all

@@ -34,4 +34,4 @@ plt.grid()
 plt.xticks(range(0, 19, 2))
 
 # Save and show the plot
-plt.savefig("partitioning_performance.png")
+plt.savefig("plots/partitioning_performance.png")

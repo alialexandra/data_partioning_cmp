@@ -4,9 +4,12 @@ EXECUTABLE="./independent_output"
 
 # Output CSV file
 OUTPUT_FILE="experiment_results.csv"
+PERF_FOLDER="perf_reports"
 
 # Number of repetitions per configuration
-REPEAT=1
+REPEAT=10
+
+mkdir -p $PERF_FOLDER
 
 # Remove previous results
 rm -f $OUTPUT_FILE
@@ -24,8 +27,13 @@ for threads in 1 2 4 8 16 32; do
         echo "$hash_bits hash bits"
         total_throughput=0
         for ((i=0; i<$REPEAT; i++)); do
+            # Run with perf stat and capture output
+            PERF_STAT_FILE="$PERF_FOLDER/perf_stat_${threads}_${hash_bits}.txt"
+
             # Run experiment and extract throughput value
-            ex=$($EXECUTABLE $threads $hash_bits)
+            ex=$(perf stat -e cycles,instructions,cache-references,cache-misses,context-switches,branch-misses,dTLB-loads,dTLB-load-misses,page-faults \
+                 -o "$PERF_STAT_FILE" $EXECUTABLE $threads $hash_bits)
+
             result=$(echo "$ex" | grep "Throughput" | awk '{print $2}')
             total_throughput=$(echo "$total_throughput + $result" | bc)
         done
@@ -36,8 +44,14 @@ for threads in 1 2 4 8 16 32; do
 done
 
 echo "Experiments completed. Results saved to $OUTPUT_FILE"
+echo "Perf stats and records saved in $PERF_FOLDER"
 
 # Call the Python script to generate the plot
-echo "Generating plot..."
+echo "Generating plots..."
 python3 plot_results.py
-echo "Plot saved as partitioning_performance.png"
+python3 plot_cycles.py
+python3 plot_cache_misses.py
+python3 plot_tlb_misses.py
+python3 plot_page_faults.py
+python3 plot_context_switches.py
+echo "Plots saved in plots/ folder"

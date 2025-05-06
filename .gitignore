@@ -22,3 +22,8 @@ concurrent_output_affinity
 no_affinity_results_local/
 
 affinity_results_local
+
+perf_reports
+plots
+gmon.out
+cpu.png
