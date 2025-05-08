@@ -95,14 +95,25 @@ void *independent_output(void *args)
     CPU_ZERO(&cpuset);
 
     uint32_t core_id;
-    if (thread->thread_id < 8) {
-        core_id = thread->thread_id * 2; // CPUs 0,2,4,6,8,10,12,14 (NUMA 0 cores)
-    }
-    else if (thread->thread_id < 16) {
-        core_id = (thread->thread_id - 8) * 2 + 1; // CPUs 1,3,5,7,9,11,13,15 (NUMA 1 cores)
-    }
-    else {
-        core_id = thread->thread_id - 16; // After 16 threads, start using CPUs 16..31
+    if (thread->thread_id < 8) 
+    {
+        // NUMA 0, physical cores: PU#0,2,4,6,8,10,12,14
+        core_id = thread->thread_id * 2;
+    } 
+    else if (thread->thread_id < 16) 
+    {
+        // NUMA 1, physical cores: PU#16,18,20,22,24,26,28,30
+        core_id = (thread->thread_id - 8) * 2 + 16;
+    } 
+    else if (thread->thread_id < 24) 
+    {
+        // NUMA 0, hyperthreads: PU#1,3,5,7,9,11,13,15
+        core_id = (thread->thread_id - 16) * 2 + 1;
+    } 
+    else 
+    {
+        // NUMA 1, hyperthreads: PU#17,19,21,23,25,27,29,31
+        core_id = (thread->thread_id - 24) * 2 + 17;
     }
 
     CPU_SET(core_id, &cpuset); // map current thread to core_id
@@ -120,8 +131,6 @@ void *independent_output(void *args)
     _mm_mfence(); // Ensure memory synchronization before proceeding
 
 
-    
-
     Tuple *tuples = thread->tuples;
     uint32_t num_tuples_to_handle = thread->num_tuples_to_handle;
     uint32_t num_partitions = thread->num_partitions;
@@ -132,15 +141,7 @@ void *independent_output(void *args)
 
     // Calculate buffer size
     uint32_t buffer_size = thread->buffer_size;
-    if (thread->num_partitions >= (1 << 17)) { 
-        buffer_size = buffer_size * 7;   // 2^16, 2^17, 2^18 => LOTS of partitions => more extra space for each partition
-    }
-    else if(thread->num_partitions >= (1 << 14)) {
-        buffer_size = buffer_size * 4;
-    }
-    else {
-        buffer_size = buffer_size * 2;
-    }
+
     // Initialize buffers
     uint32_t i;
     for (i = 0; i < num_partitions; i++)
@@ -181,6 +182,7 @@ int main(int argc, char *argv[])
     uint32_t num_partitions = 1 << hash_bits;  // 2^b                
     uint32_t num_tuples_to_handle = NUM_TUPLES / num_threads;     // num_threads will always be a power of 2 so it is evenly divisible
     uint32_t buffer_size = num_tuples_to_handle / num_partitions; 
+    buffer_size *= (num_partitions >= (1 << 17)) ? 7 : (num_partitions >= (1 << 14)) ? 4 : 2; // dynamic allocation
 
     // Allocate memory with PAGE_SIZE alignment
     Tuple* tuples = allocate_memory(NUM_TUPLES);

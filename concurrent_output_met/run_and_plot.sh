@@ -1,6 +1,6 @@
 #!/bin/bash
 
-EXECUTABLE="./independent_output"
+EXECUTABLE="./concurrent_output"
 
 # Output CSV file
 OUTPUT_FILE="experiment_results.csv"
